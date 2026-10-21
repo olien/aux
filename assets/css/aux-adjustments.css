@@ -376,3 +376,49 @@ html.aux-hide-images [style*="background-image"]:not(.aux-widget *) {
     outline: 2px solid #1a73e8 !important;
     outline-offset: 2px !important;
 }
+
+
+/* ═══════════════════════════════
+   READING RULER + READING MASK
+   Light-DOM overlays (children of <html>), below the widget, never intercept input.
+   ═══════════════════════════════ */
+
+.aux-reading-ruler,
+.aux-mask {
+    position: fixed;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.aux-reading-ruler {
+    height: 12px;
+    z-index: 2147482999;
+    border-top: 2px solid rgba(255, 0, 0, 0.5);
+    border-bottom: 2px solid rgba(255, 0, 0, 0.5);
+    background: rgba(255, 255, 0, 0.12);
+    top: 50%;
+}
+
+.aux-mask {
+    background: rgba(0, 0, 0, 0.72);
+    z-index: 2147483000;
+}
+
+.aux-mask-top {
+    top: 0;
+}
+
+.aux-mask-bottom {
+    bottom: 0;
+}
+
+@media print {
+    .aux-reading-ruler,
+    .aux-mask {
+        display: none !important;
+    }
+}

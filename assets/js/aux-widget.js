@@ -106,10 +106,13 @@
             this.ttsActive = false;
             this.ttsUtterance = null;
 
+            this.bgMarked = false;
+
             this.load();
             this.createWidget();
             this.applyAll();
             this.bindGlobalEvents();
+            this.watchDocument();
         }
 
         // ── Translation ──
@@ -145,6 +148,7 @@
         createWidget() {
             this.container = document.createElement('div');
             this.container.className = 'aux-widget';
+            this.container.lang = this.config.lang || 'de';
 
             // Apply pixel offsets from backend config as CSS variables
             const offsetX = (this.config.offsetX !== undefined) ? this.config.offsetX : 20;
@@ -190,9 +194,20 @@
             // widget is never filtered and stays viewport-anchored.
             // Inserted before <body> so the button is an early tab stop, not the last one.
             // The frame lets us follow the *visual* viewport (see fitFrame()).
-            this.frame = document.createElement('div');
-            this.frame.className = 'aux-frame';
-            this.frame.appendChild(this.container);
+            // It is the host of a shadow root: site CSS cannot restyle the widget. Hidden
+            // until its stylesheet has loaded, to avoid a flash of unstyled content.
+            this.frame = document.createElement('aux-widget-root');
+            this.frame.hidden = true;
+            const root = this.frame.attachShadow({ mode: 'open' });
+            const sheet = document.createElement('link');
+            sheet.rel = 'stylesheet';
+            sheet.href = this.config.cssUrl || (this.config.assetsUrl + 'css/aux-widget.css');
+            const reveal = () => { this.frame.hidden = false; };
+            sheet.addEventListener('load', reveal);
+            sheet.addEventListener('error', reveal);
+            setTimeout(reveal, 3000);
+            root.appendChild(sheet);
+            root.appendChild(this.container);
             document.documentElement.insertBefore(this.frame, document.body);
             this.fitFrame();
             if (window.visualViewport) {
@@ -518,7 +533,7 @@
             });
 
             document.addEventListener('click', (e) => {
-                if (this.isOpen && !this.container.contains(e.target)) {
+                if (this.isOpen && !this.inWidget(e)) {
                     this.toggle();
                 }
             });
@@ -543,7 +558,7 @@
 
             // Keyboard users: mask follows the focused element
             document.addEventListener('focusin', (e) => {
-                if (!this.settings.readingMask || this.container.contains(e.target)) return;
+                if (!this.settings.readingMask || this.inWidget(e)) return;
                 const r = e.target.getBoundingClientRect();
                 this.moveMask(Math.min(Math.max(r.top + r.height / 2, 0), window.innerHeight));
             });
@@ -551,7 +566,7 @@
             // TTS: click-to-read when active
             document.addEventListener('click', (e) => {
                 if (!this.ttsActive) return;
-                if (this.container.contains(e.target)) return;
+                if (this.inWidget(e)) return;
 
                 const el = e.target.closest('p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label, blockquote, figcaption');
                 if (el) {
@@ -579,6 +594,36 @@
         }
 
         // ── Actions ──
+
+        // Events from inside the shadow root are retargeted to the host at document level
+        inWidget(e) {
+            return e.composedPath().includes(this.frame);
+        }
+
+        /**
+         * Survives page changes that swap <body> (Turbo, Swup, PJAX, ...) and printing.
+         */
+        watchDocument() {
+            let body = document.body;
+            new MutationObserver(() => {
+                if (!this.frame.isConnected) {
+                    document.documentElement.insertBefore(this.frame, document.body);
+                }
+                if (document.body !== body) {
+                    body = document.body;
+                    this.bgMarked = false;
+                    this.applyAll();
+                }
+            }).observe(document.documentElement, { childList: true });
+
+            // print the page as it is, without filters or colour overrides
+            window.addEventListener('beforeprint', () => {
+                document.body.style.removeProperty('filter');
+                document.documentElement.classList.remove('aux-filtered', 'aux-contrast-dark',
+                    'aux-contrast-light', 'aux-contrast-high', 'aux-contrast-inverted');
+            });
+            window.addEventListener('afterprint', () => this.applyAll());
+        }
 
         toggle(returnFocus = false) {
             this.isOpen = !this.isOpen;
@@ -760,13 +805,20 @@
             const needsMarking = ['dark', 'inverted'].includes(this.settings.contrast);
 
             if (!needsMarking) {
-                document.querySelectorAll('.aux-has-bg-image').forEach(el => {
-                    el.classList.remove('aux-has-bg-image');
-                });
+                if (this.bgMarked) {
+                    document.querySelectorAll('.aux-has-bg-image').forEach(el => {
+                        el.classList.remove('aux-has-bg-image');
+                    });
+                    this.bgMarked = false;
+                }
                 return;
             }
 
-            const elements = document.querySelectorAll('body *:not(.aux-widget):not(.aux-widget *)');
+            // a full scan runs once per mode switch, not on every setting change
+            if (this.bgMarked) return;
+            this.bgMarked = true;
+
+            const elements = document.querySelectorAll('body *');
             let count = 0;
             const MAX_SCAN = 5000;
 
@@ -785,7 +837,8 @@
                     this.rulerEl = document.createElement('div');
                     this.rulerEl.className = 'aux-reading-ruler';
                     this.rulerEl.setAttribute('aria-hidden', 'true');
-                    document.body.appendChild(this.rulerEl);
+                    // child of <html> like the mask: <body> may carry the filter
+                    document.documentElement.appendChild(this.rulerEl);
                 }
                 this.rulerEl.style.display = 'block';
             } else if (this.rulerEl) {
@@ -848,7 +901,9 @@
             el.classList.add('aux-tts-highlight');
 
             this.ttsUtterance = new SpeechSynthesisUtterance(text);
-            this.ttsUtterance.lang = this.config.lang === 'en' ? 'en-US' : this.config.lang + '-' + this.config.lang.toUpperCase();
+            // the page's language, not the widget's (e.g. a French page gets an English UI)
+            this.ttsUtterance.lang = document.documentElement.lang
+                || (this.config.lang === 'en' ? 'en-US' : this.config.lang + '-' + this.config.lang.toUpperCase());
 
             this.ttsUtterance.onend = () => {
                 el.classList.remove('aux-tts-highlight');
@@ -951,9 +1006,23 @@
 
     // ── Init ──
 
+    function readConfig() {
+        const block = document.getElementById('aux-config');
+        if (block) {
+            try {
+                return JSON.parse(block.textContent);
+            } catch (e) {
+                return null;
+            }
+        }
+        return window.auxConfig || null; // legacy inline config
+    }
+
     function init() {
-        if (!window.auxConfig) return;
-        new AuxWidget(window.auxConfig);
+        const config = readConfig();
+        // run once, even if the script is included twice
+        if (!config || document.querySelector('aux-widget-root')) return;
+        new AuxWidget(config);
     }
 
     if (document.readyState === 'loading') {

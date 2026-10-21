@@ -58,6 +58,7 @@ Vorkonfigurierte Presets mit einem Klick aktivieren:
 - Panel als Off-Canvas über die volle Seitenhöhe (Header und Footer fix, Inhalt scrollt), Aktiv-Zustände nicht nur über Farbe (Häkchen, Rahmen)
 - Einheitliche Optik: ein Radius (6 px), festes Abstandsraster, Bedienelemente mit gleicher Höhe; Farben und Abstände sind CSS-Variablen (`--aux-*` an `.aux-widget`), die Aktiv-Farbe leitet sich aus der Button-Farbe ab
 - Das Widget wird nie gefiltert: Es liegt als Kind von `<html>` ausserhalb von `<body>`, der gesamte Filter (Kontrast, Graustufen, Helligkeit) wird zu einem einzigen `filter` auf `<body>` zusammengesetzt
+- Läuft in einem Shadow DOM: Seiten-CSS kann das Widget nicht verändern; funktioniert mit strenger Content-Security-Policy (Konfiguration als JSON-Datenblock, kein Inline-Script)
 - Respektiert `prefers-reduced-motion`, den Windows-Kontrastmodus (`forced-colors`) und die Schriftgrössen-Einstellung des Browsers
 - Textleser mit Statusleiste und Beenden-Button (auch per `Esc`)
 - Responsive: Passt sich auf Mobilgeräten an, unabhängig vom `<meta name="viewport">` der Seite und auch bei Pinch-Zoom (das Widget folgt dem sichtbaren Viewport und gleicht dessen Skalierung aus)
@@ -69,6 +70,7 @@ Vorkonfigurierte Presets mit einem Klick aktivieren:
 - Filter (Dunkel, Hell, Invertiert, Graustufen, Helligkeit) liegen auf `<body>`. Elemente mit `position: fixed` verankern sich dadurch am `<body>` statt am Viewport (verhielt sich vorher mit dem Filter auf `<html>` genauso).
 - Ein Hintergrundbild direkt auf `<html>` liegt im gefilterten Modus unter dem Farb-Backdrop (Hintergrundbilder auf `<body>` sind nicht betroffen).
 - *Hoher Kontrast* überschreibt Hintergrund-, Text- und Rahmenfarben der Seite. Icons mit fest gesetzter `fill`-Farbe behalten diese.
+- Mit strenger CSP müssen CSS und JS des AddOns von derselben Herkunft erlaubt sein (`script-src 'self'`, `style-src 'self'`, `img-src data:`).
 - Solange der Textleser aktiv ist, sind Links und Buttons der Seite nicht anklickbar (Statusleiste zum Beenden, `Esc`).
 
 ## Barrierefreiheit des Widgets selbst

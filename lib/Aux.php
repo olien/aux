@@ -30,45 +30,61 @@ class Aux
         $offsetX = (int) $addon->getConfig('offset_x', 20);
         $offsetY = (int) $addon->getConfig('offset_y', 50);
 
-        // Determine language
-        $lang = 'de';
-        $clangCode = rex_clang::getCurrent()->getCode();
-        if (in_array($clangCode, ['en', 'es', 'fr', 'it', 'nl', 'pt', 'sv'], true)) {
-            $lang = $clangCode;
-        }
-
-        // Load translations
-        $translations = self::getTranslations($lang);
-        $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE);
+        $lang = self::detectLanguage();
 
         // Build asset URLs
         $assetsUrl = $addon->getAssetsUrl();
-        $cssWidget = $assetsUrl . 'css/aux-widget.css?v=' . self::assetVersion('css/aux-widget.css');
         $cssAdjustments = $assetsUrl . 'css/aux-adjustments.css?v=' . self::assetVersion('css/aux-adjustments.css');
         $jsWidget = $assetsUrl . 'js/aux-widget.js?v=' . self::assetVersion('js/aux-widget.js');
+
+        // The widget stylesheet is loaded by the script into the widget's shadow root,
+        // so site CSS cannot restyle the widget (and vice versa).
+        // Config is a JSON data block: not executed, so it also works under a strict CSP.
+        $config = json_encode([
+            'position' => $position,
+            'buttonColor' => $buttonColor,
+            'offsetX' => $offsetX,
+            'offsetY' => $offsetY,
+            'assetsUrl' => $assetsUrl,
+            'cssUrl' => $assetsUrl . 'css/aux-widget.css?v=' . self::assetVersion('css/aux-widget.css'),
+            'lang' => $lang,
+            'i18n' => self::getTranslations($lang),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
 
         $injection = <<<HTML
 
 <!-- Aux Accessibility Widget -->
 <link rel="stylesheet" href="{$cssAdjustments}" />
-<link rel="stylesheet" href="{$cssWidget}" />
-<script>
-window.auxConfig = {
-    position: '{$position}',
-    buttonColor: '{$buttonColor}',
-    offsetX: {$offsetX},
-    offsetY: {$offsetY},
-    assetsUrl: '{$assetsUrl}',
-    lang: '{$lang}',
-    i18n: {$translationsJson}
-};
-</script>
+<script type="application/json" id="aux-config">{$config}</script>
 <script src="{$jsWidget}" defer></script>
 <!-- /Aux Accessibility Widget -->
 
 HTML;
 
-        return str_replace('</body>', $injection . '</body>', $content);
+        // Insert before the LAST </body> (case-insensitive): an earlier one may sit in a
+        // script string or an iframe srcdoc.
+        $pos = strripos($content, '</body>');
+        if (false === $pos) {
+            return $content;
+        }
+
+        return substr_replace($content, $injection . '</body>', $pos, strlen('</body>'));
+    }
+
+    /**
+     * Widget language from the clang code: German and English are translated,
+     * other well-known languages get English, unknown codes keep the previous
+     * default (German).
+     */
+    private static function detectLanguage(): string
+    {
+        $code = strtolower(rex_clang::getCurrent()->getCode());
+
+        if (in_array($code, ['de', 'en'], true)) {
+            return $code;
+        }
+
+        return in_array($code, ['es', 'fr', 'it', 'nl', 'pt', 'sv', 'da', 'no', 'fi', 'pl', 'cs', 'tr', 'ru', 'ja', 'zh'], true) ? 'en' : 'de';
     }
 
     /**

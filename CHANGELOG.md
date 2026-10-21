@@ -21,6 +21,17 @@
   - **Schriftgrössen folgen der Browser-Einstellung**: Das Panel skaliert mit der Standard-Schriftgrösse des Browsers (`max(14px, 0.875rem)`, also nie kleiner als 14 px, auch auf Seiten mit `html { font-size: 62.5% }`).
 - **Konfiguration**: Warnung im Backend, wenn die Button-Farbe weniger als 3:1 Kontrast zu Weiss hat (weisses Icon, Fokusring, Aktiv-Markierungen; WCAG 1.4.11). Neue Methode `Aux::contrastRatio()`, neuer Sprachschlüssel `aux_button_color_warning`.
 
+- **Robustheit auf beliebigen Seiten:**
+  - Das Widget läuft in einem **Shadow DOM**: Das CSS der Seite (Resets, `button`-/`h2`-/`*`-Regeln, `!important`) kann das Widget nicht mehr verändern. Das Widget-Stylesheet wird vom Script in den Shadow-Root geladen; bis es geladen ist, bleibt das Widget ausgeblendet.
+  - Die Konfiguration steht als JSON-Datenblock (`<script type="application/json" id="aux-config">`) statt als Inline-JavaScript. Das funktioniert auch mit strenger Content-Security-Policy (`script-src 'self'`, `style-src 'self'`).
+  - Das Widget wird vor dem **letzten** `</body>` eingefügt (Gross-/Kleinschreibung egal). Ein früheres `</body>` in einem Script-String oder `srcdoc` führt nicht mehr zu doppelter Einbindung oder fehlendem Widget. Mehrfaches Einbinden des Scripts erzeugt nur eine Instanz.
+  - Seitenwechsel ohne Reload (Turbo, Swup, PJAX …), die `<body>` austauschen, behalten Filter und Einstellungen.
+  - Beim Drucken werden Filter und Farbüberschreibung entfernt, Widget, Maske und Lineal werden nicht gedruckt.
+  - Höherer `z-index`, damit Cookie-Banner und Modals das Panel nicht verdecken.
+  - Der Hintergrundbild-Scan für Dunkel/Invertiert läuft nur einmal pro Moduswechsel statt bei jeder Einstellung.
+  - Sprache: Deutsch und Englisch sind übersetzt, andere bekannte Sprachen (`es`, `fr`, `it` …) erhalten Englisch statt Deutsch, unbekannte Codes bleiben bei Deutsch. Das Widget trägt ein passendes `lang`-Attribut, der Textleser liest in der Sprache der Seite (`<html lang>`).
+  - Das Lese-Lineal liegt wie die Maske unter `<html>` (nicht mehr im gefilterten `<body>`).
+
 ### Geändert
 - Der dekorative Männchen-Icon im Panel-Header entfällt (der Button trägt es bereits); die sichtbare Überschrift bleibt als Name des Panels.
 - Emoji-Icons der Profile, Schliessen- und Reset-Button durch Inline-SVGs (Stroke-Stil) ersetzt, alle mit `aria-hidden="true"`.
