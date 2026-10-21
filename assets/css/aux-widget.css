@@ -34,6 +34,18 @@
     z-index: 999999;
 }
 
+/* Pass-through frame that follows the visual viewport (JS: fitFrame) */
+.aux-frame {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    pointer-events: none;
+}
+
+.aux-widget {
+    pointer-events: auto;
+}
+
 /* ── Position ──
    Offsets are controlled via --aux-offset-x and --aux-offset-y
    which the JS sets from the backend config. Fallbacks match the
@@ -102,7 +114,7 @@
     top: 0;
     bottom: 0;
     right: 0;
-    width: min(380px, 100vw);
+    width: min(380px, 100%); /* % of the frame/viewport, not 100vw: the layout viewport can be wider than the screen */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -576,7 +588,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    max-width: calc(100vw - 32px);
+    max-width: calc(100% - 32px);
     padding: 10px 12px 10px 16px;
     border-radius: 8px;
     background: #111827;
@@ -605,6 +617,17 @@
 .aux-tts-stop:focus-visible {
     outline: 3px solid #ffffff;
     outline-offset: 2px;
+}
+
+/* Phones: use the full width instead of leaving a sliver of the page */
+.aux-frame {
+    container-type: inline-size;
+}
+
+@container (max-width: 420px) {
+    .aux-panel {
+        width: 100%;
+    }
 }
 
 /* ── Forced colors (Windows High Contrast): keep switches and checkmarks visible ── */

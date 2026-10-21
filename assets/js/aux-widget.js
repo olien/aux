@@ -189,7 +189,16 @@
             // Child of <html>, not <body>: filters are applied to <body>, so the
             // widget is never filtered and stays viewport-anchored.
             // Inserted before <body> so the button is an early tab stop, not the last one.
-            document.documentElement.insertBefore(this.container, document.body);
+            // The frame lets us follow the *visual* viewport (see fitFrame()).
+            this.frame = document.createElement('div');
+            this.frame.className = 'aux-frame';
+            this.frame.appendChild(this.container);
+            document.documentElement.insertBefore(this.frame, document.body);
+            this.fitFrame();
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', () => this.fitFrame());
+                window.visualViewport.addEventListener('scroll', () => this.fitFrame());
+            }
 
             if (this.settings.widgetPosition === 'hidden') {
                 this.container.style.display = 'none';
@@ -197,6 +206,26 @@
 
             this.bindPanelEvents();
             this.updateUI();
+        }
+
+        /**
+         * Keeps the widget at its normal size and in view, whatever the page's
+         * viewport setup: on pages without <meta name="viewport"> a phone lays the
+         * page out at ~980px and scales it down, and pinch-zoom magnifies everything.
+         * When the visual viewport is scaled, the frame is sized to it in device
+         * pixels and scaled back, so fixed children behave like on a normal page.
+         */
+        fitFrame() {
+            const vv = window.visualViewport;
+            const style = this.frame.style;
+            if (!vv || Math.abs(vv.scale - 1) < 0.01) {
+                style.cssText = '';
+                return;
+            }
+            const s = vv.scale;
+            style.cssText = `inset:auto;left:${vv.offsetLeft}px;top:${vv.offsetTop}px;`
+                + `width:${vv.width * s}px;height:${vv.height * s}px;`
+                + `transform:scale(${1 / s});transform-origin:0 0;`;
         }
 
         applyWidgetPosition(position) {
@@ -312,8 +341,10 @@
         }
 
         buildOtherSection() {
+            // A larger cursor is meaningless without a mouse or trackpad (touch-only devices)
+            const hasFinePointer = window.matchMedia('(any-pointer: fine)').matches;
             const toggles = [
-                { key: 'bigCursor', label: this.t('big_cursor') },
+                ...(hasFinePointer ? [{ key: 'bigCursor', label: this.t('big_cursor') }] : []),
                 { key: 'stopAnimations', label: this.t('stop_animations') },
                 { key: 'hideImages', label: this.t('hide_images') },
             ];
@@ -500,7 +531,12 @@
             });
 
             const onTouch = (e) => {
-                if (e.touches.length) this.moveMask(e.touches[0].clientY);
+                if (!e.touches.length) return;
+                const y = e.touches[0].clientY;
+                if (this.settings.readingRuler && this.rulerEl) {
+                    this.rulerEl.style.top = y + 'px';
+                }
+                this.moveMask(y);
             };
             document.addEventListener('touchstart', onTouch, { passive: true });
             document.addEventListener('touchmove', onTouch, { passive: true });

@@ -60,7 +60,8 @@ Vorkonfigurierte Presets mit einem Klick aktivieren:
 - Das Widget wird nie gefiltert: Es liegt als Kind von `<html>` ausserhalb von `<body>`, der gesamte Filter (Kontrast, Graustufen, Helligkeit) wird zu einem einzigen `filter` auf `<body>` zusammengesetzt
 - Respektiert `prefers-reduced-motion`, den Windows-Kontrastmodus (`forced-colors`) und die Schriftgrössen-Einstellung des Browsers
 - Textleser mit Statusleiste und Beenden-Button (auch per `Esc`)
-- Responsive: Passt sich auf Mobilgeräten an
+- Responsive: Passt sich auf Mobilgeräten an, unabhängig vom `<meta name="viewport">` der Seite und auch bei Pinch-Zoom (das Widget folgt dem sichtbaren Viewport und gleicht dessen Skalierung aus)
+- Lese-Lineal und Lesemaske funktionieren mit Maus, Finger und (Maske) Tastatur-Fokus; „Cursor vergrössern“ wird auf Geräten ohne Maus ausgeblendet
 - Mehrsprachig: Deutsch und Englisch
 
 ## Bekannte Einschränkungen

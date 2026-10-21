@@ -29,6 +29,8 @@
 - Zurücksetzen setzt auch die Widget-Position auf die Server-Vorgabe zurück.
 - Optik überarbeitet: ein einheitlicher Radius (6 px, Schalter und Haken bleiben rund), einheitliches Abstandsraster (4 / 8 / 16 / 20 px), Bedienelemente mit gleicher Höhe, ruhigere Farben (`#111827` / `#4b5563`), Aktiv-Farbe leitet sich per `color-mix` aus der Button-Farbe ab. Der Button ist ein abgerundetes Quadrat statt eines Kreises. Kontrast, Zielgrössen und Häkchen bleiben unverändert.
 - Stepper zeigen positive Werte mit Vorzeichen (`+1`).
+- Auf Smartphones (bis 420 px) nutzt das Panel die volle Breite.
+- **Unabhängig vom `<meta name="viewport">` der Seite**: Das Widget richtet sich am sichtbaren Viewport aus (`visualViewport`) und gleicht dessen Skalierung aus. Auch auf Seiten ohne Viewport-Meta (Handy rechnet dann mit ~980 px Breite) oder bei Pinch-Zoom bleiben Button und Panel in normaler Grösse an derselben Stelle sichtbar. Die Breite des Panels richtet sich nach dem Viewport statt nach `100vw`.
 - Stepper (Helligkeit, Textgrösse, Zeilen- und Buchstabenabstand) stehen als Zeile: Beschriftung links, Bedienelement rechts.
 
 ### Behoben
@@ -37,6 +39,8 @@
 - Dyslexie-Schrift, Zeilen-/Buchstabenabstand, Textausrichtung und „Animationen stoppen“ wirkten auch auf das Widget selbst (Text lief aus dem Panel). Die Regeln gelten jetzt nur noch für `body`.
 - Stepper-Beschriftungen waren fest auf Deutsch kodiert.
 - Die Focus-Hervorhebung (orangefarbener Ring) wirkte auch auf die Bedienelemente des Widgets und überlagerte dessen eigenen Fokusring. Sie gilt jetzt nur noch für die Seite.
+- Das Lese-Lineal folgt jetzt auch dem Finger (`touchmove`), nicht nur der Maus.
+- Auf Geräten ohne Maus oder Trackpad (`any-pointer: fine` trifft nicht zu) wird „Cursor vergrössern“ nicht mehr angezeigt.
 - Typ-Annotationen in `Aux.php` ergänzt (`inject()`, `getTranslations()`), das AddOn ist damit auf PHPStan Level 6 (Rexstan) ohne Funde.
 - Reset und Textleser warfen in Browsern ohne `speechSynthesis` einen Fehler.
 
