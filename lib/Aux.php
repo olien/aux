@@ -41,9 +41,9 @@ class Aux
 
         // Build asset URLs
         $assetsUrl = $addon->getAssetsUrl();
-        $cssWidget = $assetsUrl . 'css/aux-widget.css';
-        $cssAdjustments = $assetsUrl . 'css/aux-adjustments.css';
-        $jsWidget = $assetsUrl . 'js/aux-widget.js';
+        $cssWidget = $assetsUrl . 'css/aux-widget.css?v=' . self::assetVersion('css/aux-widget.css');
+        $cssAdjustments = $assetsUrl . 'css/aux-adjustments.css?v=' . self::assetVersion('css/aux-adjustments.css');
+        $jsWidget = $assetsUrl . 'js/aux-widget.js?v=' . self::assetVersion('js/aux-widget.js');
 
         $injection = <<<HTML
 
@@ -70,6 +70,35 @@ HTML;
     }
 
     /**
+     * WCAG contrast ratio between two #rrggbb colours (1 to 21).
+     */
+    public static function contrastRatio(string $hexA, string $hexB): float
+    {
+        $luminance = static function (string $hex): float {
+            $channels = array_map(
+                static function (string $c): float {
+                    $v = hexdec($c) / 255;
+                    return $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4;
+                },
+                str_split(ltrim($hex, '#'), 2),
+            );
+            return 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
+        };
+        $a = $luminance($hexA);
+        $b = $luminance($hexB);
+
+        return (max($a, $b) + 0.05) / (min($a, $b) + 0.05);
+    }
+
+    /**
+     * Cache-buster: file mtime, so changed assets are never served stale.
+     */
+    private static function assetVersion(string $file): int
+    {
+        return (int) @filemtime(rex_addon::get('aux')->getAssetsPath($file));
+    }
+
+    /**
      * Get translations for the widget frontend.
      */
     private static function getTranslations(string $lang): array
@@ -92,6 +121,10 @@ HTML;
                 'contrast_light' => 'Hell',
                 'contrast_high' => 'Hoher Kontrast',
                 'contrast_inverted' => 'Invertiert',
+                'grayscale' => 'Graustufen',
+                'brightness' => 'Helligkeit',
+                'decrease' => 'verringern',
+                'increase' => 'erhöhen',
                 'text_size' => 'Textgröße',
                 'line_height' => 'Zeilenabstand',
                 'letter_spacing' => 'Buchstabenabstand',
@@ -104,6 +137,9 @@ HTML;
                 'highlight_links' => 'Links hervorheben',
                 'highlight_headings' => 'Überschriften markieren',
                 'reading_ruler' => 'Lese-Lineal',
+                'reading_mask' => 'Lesemaske',
+                'tts_active' => 'Textleser aktiv: Ein Klick auf Text liest ihn vor, Links sind vorübergehend nicht anklickbar.',
+                'tts_stop' => 'Beenden',
                 'dyslexia_font' => 'Dyslexie-Schrift',
                 'focus_highlight' => 'Focus-Hervorhebung',
                 'other' => 'Sonstiges',
@@ -135,6 +171,10 @@ HTML;
                 'contrast_light' => 'Light',
                 'contrast_high' => 'High Contrast',
                 'contrast_inverted' => 'Inverted',
+                'grayscale' => 'Grayscale',
+                'brightness' => 'Brightness',
+                'decrease' => 'decrease',
+                'increase' => 'increase',
                 'text_size' => 'Text Size',
                 'line_height' => 'Line Height',
                 'letter_spacing' => 'Letter Spacing',
@@ -147,6 +187,9 @@ HTML;
                 'highlight_links' => 'Highlight Links',
                 'highlight_headings' => 'Highlight Headings',
                 'reading_ruler' => 'Reading Ruler',
+                'reading_mask' => 'Reading Mask',
+                'tts_active' => 'Text reader on: click text to hear it read aloud. Links are temporarily not clickable.',
+                'tts_stop' => 'Stop',
                 'dyslexia_font' => 'Dyslexia Font',
                 'focus_highlight' => 'Focus Highlight',
                 'other' => 'Other',
