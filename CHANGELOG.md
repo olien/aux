@@ -37,6 +37,7 @@
 - Dyslexie-Schrift, Zeilen-/Buchstabenabstand, Textausrichtung und „Animationen stoppen“ wirkten auch auf das Widget selbst (Text lief aus dem Panel). Die Regeln gelten jetzt nur noch für `body`.
 - Stepper-Beschriftungen waren fest auf Deutsch kodiert.
 - Die Focus-Hervorhebung (orangefarbener Ring) wirkte auch auf die Bedienelemente des Widgets und überlagerte dessen eigenen Fokusring. Sie gilt jetzt nur noch für die Seite.
+- Typ-Annotationen in `Aux.php` ergänzt (`inject()`, `getTranslations()`), das AddOn ist damit auf PHPStan Level 6 (Rexstan) ohne Funde.
 - Reset und Textleser warfen in Browsern ohne `speechSynthesis` einen Fehler.
 
 ## 1.3.1

@@ -12,6 +12,8 @@ class Aux
     /**
      * OUTPUT_FILTER Extension Point Callback.
      * Injects the aux accessibility widget into the frontend.
+     *
+     * @param \rex_extension_point<string> $ep
      */
     public static function inject(\rex_extension_point $ep): string
     {
@@ -100,6 +102,8 @@ HTML;
 
     /**
      * Get translations for the widget frontend.
+     *
+     * @return array<string, string>
      */
     private static function getTranslations(string $lang): array
     {
