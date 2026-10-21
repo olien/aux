@@ -32,6 +32,8 @@
   - Sprache: Deutsch und Englisch sind übersetzt, andere bekannte Sprachen (`es`, `fr`, `it` …) erhalten Englisch statt Deutsch, unbekannte Codes bleiben bei Deutsch. Das Widget trägt ein passendes `lang`-Attribut, der Textleser liest in der Sprache der Seite (`<html lang>`).
   - Das Lese-Lineal liegt wie die Maske unter `<html>` (nicht mehr im gefilterten `<body>`).
 
+- **Nichts springt mehr, wenn eine Option aktiviert wird**: Aktive Optionen werden nicht mehr fett (fetter Text ist breiter) und bekommen kein Häkchen, das den Text verschiebt. Stattdessen reservieren alle Buttons einen Platz für einen Indikator: leerer Kreis = aus, gefüllter Kreis mit Häkchen = an, dazu stärkerer Rahmen (innerer Schatten, ohne Platzbedarf). Geprüft: Jeder Klick auf jedes Bedienelement lässt Position und Grösse aller Elemente im Panel unverändert (ausser dem Schalter-Knopf, der wie vorgesehen gleitet). Zusätzlich `scrollbar-gutter: stable` im Panel.
+
 ### Geändert
 - Der dekorative Männchen-Icon im Panel-Header entfällt (der Button trägt es bereits); die sichtbare Überschrift bleibt als Name des Panels.
 - Emoji-Icons der Profile, Schliessen- und Reset-Button durch Inline-SVGs (Stroke-Stil) ersetzt, alle mit `aria-hidden="true"`.
@@ -39,6 +41,9 @@
 - Das Widget liegt als Kind von `<html>` (nicht mehr in `<body>`); Filter liegen auf `<body>`. Dadurch wird das Widget nie mitgefiltert; die bisherige Positions-Korrektur (`applyContrastPositionFix`) und das Gegen-Invertieren des Widgets entfallen.
 - Zurücksetzen setzt auch die Widget-Position auf die Server-Vorgabe zurück.
 - Optik überarbeitet: ein einheitlicher Radius (6 px, Schalter und Haken bleiben rund), einheitliches Abstandsraster (4 / 8 / 16 / 20 px), Bedienelemente mit gleicher Höhe, ruhigere Farben (`#111827` / `#4b5563`), Aktiv-Farbe leitet sich per `color-mix` aus der Button-Farbe ab. Der Button ist ein abgerundetes Quadrat statt eines Kreises. Kontrast, Zielgrössen und Häkchen bleiben unverändert.
+- **Grosser Cursor** überarbeitet: Pfeil, Hand und Text-Cursor in 48 px (vorher war der Zeiger-Cursor ein auf den Kopf gedrehter Pfeil). Die Hand gilt für Links, Buttons, `summary`, Labels, Checkboxen, Radios, Selects, `[role=button|link|tab|…]`, `[onclick]` und fokussierbare Elemente samt deren Kindelementen; Eingabefelder erhalten einen grossen Text-Cursor. Der grosse Cursor gilt jetzt auch im Widget selbst (Shadow DOM); die Cursor sind dafür CSS-Variablen auf `<html>` (`--aux-cur-arrow|hand|text`), der Hotspot des Pfeils liegt an der Spitze.
+- Das Panel ist 420 px breit (vorher 380 px), damit die vier Textausrichtungs-Buttons in einer Zeile stehen. Profil-Kacheln haben gleich breite Spalten, lange Wörter brechen um statt zu überlaufen.
+- **Dyslexie-Schrift auch im Widget**: Die Schriftart (nicht Buchstaben- oder Zeilenabstand, die das Layout sprengen würden) gilt auch für das Panel, über die CSS-Variable `--aux-font` auf `<html>`. Buttons erben jetzt die Schrift des Widgets.
 - Stepper zeigen positive Werte mit Vorzeichen (`+1`).
 - Auf Smartphones (bis 420 px) nutzt das Panel die volle Breite.
 - **Unabhängig vom `<meta name="viewport">` der Seite**: Das Widget richtet sich am sichtbaren Viewport aus (`visualViewport`) und gleicht dessen Skalierung aus. Auch auf Seiten ohne Viewport-Meta (Handy rechnet dann mit ~980 px Breite) oder bei Pinch-Zoom bleiben Button und Panel in normaler Grösse an derselben Stelle sichtbar. Die Breite des Panels richtet sich nach dem Viewport statt nach `100vw`.

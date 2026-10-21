@@ -25,12 +25,15 @@
     /* Checkmark used as shape (mask) so active states don't rely on colour alone */
     --aux-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
 
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* --aux-font is set on <html> by the dyslexia font option (custom properties cross the shadow boundary);
+       only the typeface applies here, not letter/line spacing, which would break the layout */
+    font-family: var(--aux-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
     /* follows the browser's font-size setting, but never below 14px (sites with html{font-size:62.5%}) */
     --aux-fs: max(14px, 0.875rem);
     font-size: var(--aux-fs);
     line-height: 1.5;
     color: var(--aux-text);
+    cursor: var(--aux-cur-arrow, auto);
     z-index: 2147483646;
 }
 
@@ -84,6 +87,11 @@
     left: var(--aux-offset-x, 20px);
 }
 
+/* form controls do not inherit the font by default */
+.aux-widget button {
+    font-family: inherit;
+}
+
 /* ── Toggle Button ── */
 .aux-toggle-btn {
     width: 56px;
@@ -92,7 +100,7 @@
     border: none;
     background: var(--aux-btn-color, #1a73e8);
     color: #ffffff;
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -123,7 +131,7 @@
     top: 0;
     bottom: 0;
     right: 0;
-    width: min(380px, 100%); /* % of the frame/viewport, not 100vw: the layout viewport can be wider than the screen */
+    width: min(420px, 100%); /* wide enough for the 4 alignment buttons in one row; % of the frame/viewport, not 100vw (the layout viewport can be wider than the screen) */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -186,7 +194,7 @@
     border: none;
     background: transparent;
     font-size: calc(var(--aux-fs) * 22 / 14);
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     border-radius: var(--aux-radius);
     display: flex;
     align-items: center;
@@ -210,6 +218,7 @@
     flex: 1 1 auto;
     min-height: 0; /* lets the flex child shrink and scroll instead of overflowing */
     overflow-y: auto;
+    scrollbar-gutter: stable; /* no sideways jump if a scrollbar appears */
 }
 
 /* ── Panel Footer (fixed, outside the scroll area) ── */
@@ -242,7 +251,7 @@
 /* ── Profiles Grid ── */
 .aux-profiles-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* equal columns whatever the label widths */
     gap: var(--aux-gap);
 }
 
@@ -256,7 +265,7 @@
     border: 1px solid var(--aux-control-border);
     border-radius: var(--aux-radius);
     background: var(--aux-bg);
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     transition: all var(--aux-transition);
     font-size: calc(var(--aux-fs) * 12 / 14);
     color: var(--aux-text);
@@ -276,7 +285,6 @@
     background: var(--aux-active) !important;
     border-color: var(--aux-active-border) !important;
     box-shadow: inset 0 0 0 1px var(--aux-active-border);
-    font-weight: 700;
 }
 
 /* Checkmark badge in the corner */
@@ -317,6 +325,8 @@
     font-size: calc(var(--aux-fs) * 12 / 14);
     text-align: center;
     line-height: 1.2;
+    max-width: 100%;
+    overflow-wrap: anywhere; /* long words (wide typefaces, translations) wrap instead of overflowing */
 }
 
 /* ── Contrast / Option Buttons ── */
@@ -359,18 +369,20 @@
 .aux-contrast-group {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--aux-gap);
+    gap: 6px;
 }
 
 .aux-contrast-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     min-height: 32px;
-    padding: 0 12px;
+    padding: 0 9px;
+    font-weight: 500; /* same in every state: nothing may change size when activated */
     border: 1px solid var(--aux-control-border);
     border-radius: var(--aux-radius);
     background: var(--aux-bg);
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     font-size: calc(var(--aux-fs) * 12 / 14);
     color: var(--aux-text);
     transition: all var(--aux-transition);
@@ -389,17 +401,35 @@
     background: var(--aux-active) !important;
     border-color: var(--aux-active-border) !important;
     box-shadow: inset 0 0 0 1px var(--aux-active-border);
-    font-weight: 700;
+}
+
+/* Indicator slot, always reserved so activating an option never shifts anything:
+   empty circle = off, filled circle with checkmark = on (not colour alone) */
+.aux-contrast-btn::before {
+    content: '';
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    border: 1.5px solid var(--aux-control-border);
+    border-radius: 50%;
 }
 
 .aux-contrast-active::before {
+    border-color: var(--aux-active-border);
+    background: var(--aux-active-border);
+}
+
+.aux-contrast-active::after {
     content: '';
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    margin-right: 4px;
-    vertical-align: -1px;
-    background: currentColor;
+    position: absolute;
+    left: 10px; /* 9px padding + 1px: centred in the 12px circle */
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin-top: -5px;
+    background: #ffffff;
     -webkit-mask: var(--aux-check) center / contain no-repeat;
     mask: var(--aux-check) center / contain no-repeat;
 }
@@ -420,7 +450,7 @@
     height: calc(var(--aux-control-h) - 2px);
     border: none;
     background: var(--aux-bg);
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     font-size: calc(var(--aux-fs) * 16 / 14);
     font-weight: 600;
     color: var(--aux-text);
@@ -465,7 +495,7 @@
     align-items: center;
     justify-content: space-between;
     min-height: 40px;
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     font-size: calc(var(--aux-fs) * 13 / 14);
     color: var(--aux-text);
 }
@@ -474,7 +504,7 @@
     position: relative;
     border: none;
     background: transparent;
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     padding: 0;
 }
 
@@ -537,7 +567,7 @@
     border: 1px solid var(--aux-control-border);
     border-radius: var(--aux-radius);
     background: var(--aux-bg);
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
     font-size: calc(var(--aux-fs) * 13 / 14);
     font-weight: 500;
     color: var(--aux-text-muted);
@@ -587,7 +617,7 @@
     color: #111827;
     font: inherit;
     font-weight: 600;
-    cursor: pointer;
+    cursor: var(--aux-cur-hand, pointer);
 }
 
 .aux-tts-stop:focus-visible {
@@ -630,9 +660,19 @@
         background: Highlight;
     }
 
-    .aux-contrast-active::before {
+    .aux-contrast-btn::before {
         forced-color-adjust: none;
-        background: ButtonText;
+        border-color: ButtonText;
+    }
+
+    .aux-contrast-active::before {
+        border-color: Highlight;
+        background: Highlight;
+    }
+
+    .aux-contrast-active::after {
+        forced-color-adjust: none;
+        background: HighlightText;
     }
 
     .aux-profile-active::after {

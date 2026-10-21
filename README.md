@@ -41,9 +41,9 @@ Vorkonfigurierte Presets mit einem Klick aktivieren:
 - Überschriften-Hierarchie sichtbar machen
 - Lese-Lineal (folgt der Maus)
 - Lesemaske (dunkelt die Seite bis auf einen Streifen um Maus, Finger bzw. Tastatur-Fokus ab; schliesst sich mit dem Lese-Lineal gegenseitig aus)
-- Dyslexie-Schrift (OpenDyslexic)
+- Dyslexie-Schrift (OpenDyslexic, auch im Widget selbst)
 - Focus-Hervorhebung
-- Cursor vergrössern
+- Cursor vergrössern (grosser Pfeil, Hand und Text-Cursor, auch im Widget)
 - Animationen und Videos stoppen
 - Bilder ausblenden
 - Widget-Position im Frontend umschalten (Links / Rechts / Ausblenden)
